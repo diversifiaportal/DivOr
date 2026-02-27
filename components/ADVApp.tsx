@@ -898,7 +898,12 @@ const ADVApp: React.FC<ADVAppProps> = ({ user, salesAgents = SALES_AGENTS }) => 
   const openModal = (order?: ADVOrder) => {
     if (order) {
       setEditingOrder(order);
-      setFormOrder(order);
+      // Ensure commercial value is valid - if not in list, show the actual value
+      const formData = { 
+        ...order,
+        commercial: order.commercial || '' 
+      };
+      setFormOrder(formData);
       // Check serial status if editing existing order
       if (order.nSerieVerifie) {
         checkSerialStatus(order.nSerieVerifie);
@@ -1186,16 +1191,18 @@ const ADVApp: React.FC<ADVAppProps> = ({ user, salesAgents = SALES_AGENTS }) => 
               <table className="w-full text-left border-collapse">
                  <thead className="bg-white text-[9px] font-black uppercase text-slate-400 sticky top-0 z-10 shadow-sm">
                     <tr>
-                       <th className="p-4 w-[16%]">Client / Réf</th>
-                       <th className="p-4 w-[10%]">Téléphone</th>
-                       <th className="p-4 w-[9%]">Offre</th>
-                       <th className="p-4 w-[11%] text-center">Validation</th>
-                       <th className="p-4 w-[9%] text-center bg-orange-50/20 text-orange-600">SLA ADV</th>
-                       <th className="p-4 w-[11%] text-center">Statut SI</th>
-                       <th className="p-4 w-[9%] text-center bg-blue-50/20 text-blue-600">SLA ACTIV.</th>
-                       <th className="p-4 w-[7%] text-center">Date GO</th>
-                       <th className="p-4 w-[7%]">Commercial</th>
-                       <th className="p-4 text-right w-[11%]">Action</th>
+                       <th className="p-4 w-[14%]">Client / Réf</th>
+                       <th className="p-4 w-[8%]">N° Fixe</th>
+                       <th className="p-4 w-[9%]">Téléphone</th>
+                       <th className="p-4 w-[8%]">Offre</th>
+                       <th className="p-4 w-[10%] text-center">Validation</th>
+                       <th className="p-4 w-[8%] text-center bg-orange-50/20 text-orange-600">SLA ADV</th>
+                       <th className="p-4 w-[9%] text-center">Statut SI</th>
+                       <th className="p-4 w-[8%] text-center bg-blue-50/20 text-blue-600">SLA ACTIV.</th>
+                       <th className="p-4 w-[10%]">Sériel Vérifié</th>
+                       <th className="p-4 w-[6%] text-center">Date GO</th>
+                       <th className="p-4 w-[6%]">Commercial</th>
+                       <th className="p-4 text-right w-[12%]">Action</th>
                     </tr>
                  </thead>
                  <tbody className="divide-y divide-slate-50">
@@ -1208,6 +1215,11 @@ const ADVApp: React.FC<ADVAppProps> = ({ user, salesAgents = SALES_AGENTS }) => 
                                <span className="text-[9px] text-slate-400 flex items-center font-bold tracking-tight"><Calendar className="w-2.5 h-2.5 mr-1" /> {new Date(order.dateDepot).toLocaleDateString()} {new Date(order.dateDepot).toLocaleTimeString()}</span>
 
                              </div>
+                          </td>
+                          <td className="p-4">
+                             <span className="text-[9px] font-bold text-slate-600 bg-slate-50 px-2 py-1 rounded border border-slate-200 font-mono truncate max-w-[100px] block">
+                               {order.nFixe || '-'}
+                             </span>
                           </td>
                           <td className="p-4">
                              <span className="text-[9px] font-bold text-slate-600 bg-slate-50 px-2 py-1 rounded border border-slate-200 font-mono truncate max-w-[120px] block">
@@ -1240,6 +1252,16 @@ const ADVApp: React.FC<ADVAppProps> = ({ user, salesAgents = SALES_AGENTS }) => 
                           </td>
                           <td className="p-4 text-center bg-blue-50/10 font-black text-[10px] text-blue-600 italic">
                              {order.dateValidation ? calculateSLA(order.dateValidation, order.dateActivationEnd || undefined) : "-"}
+                          </td>
+                          <td className="p-4">
+                             {order.nSerieVerifie ? (
+                               <div className="flex flex-col">
+                                 <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-2 py-1 rounded border border-emerald-200 font-mono truncate max-w-[120px] block">{order.nSerieVerifie}</span>
+                                 {order.dateSerieVerifie && <span className="text-[8px] text-slate-500 mt-1 font-bold">{new Date(order.dateSerieVerifie).toLocaleDateString()}</span>}
+                               </div>
+                             ) : (
+                               <span className="text-slate-300 text-[9px] font-black">-</span>
+                             )}
                           </td>
                           <td className="p-4 text-center">
                              {order.dateGo ? (
@@ -1448,7 +1470,25 @@ const ADVApp: React.FC<ADVAppProps> = ({ user, salesAgents = SALES_AGENTS }) => 
                        <div className="space-y-1"><label className="text-[9px] font-black uppercase text-slate-400 ml-2">Date Vérification</label><input type="date" value={formOrder.dateSerieVerifie || ''} onChange={e => updateFormOrder({ dateSerieVerifie: e.target.value })} className="w-full p-3 rounded-xl bg-white border-none font-bold text-sm shadow-inner" /></div>
                     </div>
                  </div>
-                 <div className="space-y-1"><label className="text-[10px] font-black uppercase text-slate-400 ml-2 tracking-widest">Commercial en charge</label><select value={formOrder.commercial || ''} onChange={e => updateFormOrder({ commercial: e.target.value })} className="w-full p-4 rounded-xl bg-slate-50 border-none font-black text-sm appearance-none cursor-pointer shadow-inner"><option value="">Sélectionner un agent...</option>{salesAgents.map(a => <option key={a} value={a}>{a}</option>)}</select></div>
+                 <div className="space-y-1">
+                    <label className="text-[10px] font-black uppercase text-slate-400 ml-2 tracking-widest">Commercial en charge</label>
+                    <select 
+                      value={formOrder.commercial || ''} 
+                      onChange={e => updateFormOrder({ commercial: e.target.value })} 
+                      className="w-full p-4 rounded-xl bg-slate-50 border-none font-black text-sm appearance-none cursor-pointer shadow-inner"
+                    >
+                      <option value="">Sélectionner un agent...</option>
+                      {salesAgents.map(a => (
+                        <option key={a} value={a}>{a}</option>
+                      ))}
+                    </select>
+                    {formOrder.commercial && !salesAgents.includes(formOrder.commercial) && (
+                      <div className="mt-2 p-2 bg-amber-50 border border-amber-200 rounded-lg">
+                        <p className="text-[9px] font-bold text-amber-700">⚠️ Agent non reconnu: <span className="font-black">{formOrder.commercial}</span></p>
+                        <p className="text-[8px] text-amber-600 mt-1">Veuillez sélectionner l'agent correct dans la liste</p>
+                      </div>
+                    )}
+                 </div>
               </div>
               <div className="p-8 bg-slate-50 border-t border-slate-100 flex gap-4">
                  <button onClick={() => setShowModal(false)} className="flex-1 py-4 bg-white border border-slate-200 text-slate-500 rounded-2xl font-black uppercase text-xs hover:bg-slate-100 transition-colors shadow-sm">Annuler</button>
