@@ -10,6 +10,7 @@
     "deploy": "npm run build && firebase deploy"
   },
   "dependencies": {
+    "@google/genai": "^1.43.0",
     "@google/generative-ai": "^0.24.1",
     "@neondatabase/serverless": "^0.10.4",
     "dotenv": "^16.4.5",

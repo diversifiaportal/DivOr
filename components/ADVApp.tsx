@@ -202,6 +202,9 @@ const ADVApp: React.FC<ADVAppProps> = ({ user, salesAgents = SALES_AGENTS }) => 
   const chatEndRef = useRef<HTMLDivElement>(null);
   const [showAiPanel, setShowAiPanel] = useState(false);
   const [showSlaSummary, setShowSlaSummary] = useState(false);
+  const [showModifyDepotDatePanel, setShowModifyDepotDatePanel] = useState(false);
+  const [selectedClientsForDate, setSelectedClientsForDate] = useState<string[]>([]);
+  const [newDepotDate, setNewDepotDate] = useState<string>(new Date().toISOString().split('T')[0]);
 
   // Modal State
   const [showModal, setShowModal] = useState(false);
@@ -1128,6 +1131,9 @@ const ADVApp: React.FC<ADVAppProps> = ({ user, salesAgents = SALES_AGENTS }) => 
               <button onClick={() => setShowSlaSummary(!showSlaSummary)} className={`p-3.5 rounded-2xl transition-all shadow-sm border ${showSlaSummary ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`} title="Performance SLA par Offre">
                  <Timer className="w-5 h-5" />
               </button>
+              <button onClick={() => setShowModifyDepotDatePanel(!showModifyDepotDatePanel)} className={`p-3.5 rounded-2xl transition-all shadow-sm border ${showModifyDepotDatePanel ? 'bg-blue-50 border-blue-200 text-blue-600' : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`} title="Modification Date Dépôt (Multi-clients)">
+                 <Calendar className="w-5 h-5" />
+              </button>
               <button onClick={() => setShowAiPanel(!showAiPanel)} className={`p-3.5 rounded-2xl transition-all shadow-sm border ${showAiPanel ? 'bg-indigo-50 border-indigo-200 text-indigo-600' : 'bg-white border-slate-100 text-slate-400 hover:bg-slate-50'}`}>
                  <Sparkles className="w-5 h-5" />
               </button>
@@ -1352,6 +1358,88 @@ const ADVApp: React.FC<ADVAppProps> = ({ user, salesAgents = SALES_AGENTS }) => 
               <div className="p-8 bg-slate-50 border-t flex justify-end">
                  <button onClick={() => setShowSlaSummary(false)} className="px-10 py-4 bg-slate-900 text-white rounded-2xl font-black uppercase text-xs tracking-widest shadow-xl hover:bg-[#ff7900] transition-all">Fermer l'analyse</button>
               </div>
+           </div>
+        </div>
+      )}
+
+      {showModifyDepotDatePanel && (
+        <div className="absolute top-24 right-24 bottom-6 bg-white rounded-[2.5rem] shadow-2xl border border-slate-100 overflow-hidden flex flex-col animate-in slide-in-from-right-10 z-50 w-[700px]">
+           <div className="p-6 bg-slate-900 text-white flex justify-between items-center border-b border-slate-700">
+              <span className="text-xs font-black uppercase tracking-widest flex items-center">
+                 <Calendar className="w-5 h-5 mr-2 text-blue-400" /> Modification Date Dépôt (Multi-clients)
+              </span>
+              <button onClick={() => { setShowModifyDepotDatePanel(false); setSelectedClientsForDate([]); }} className="text-slate-400 hover:text-white">
+                 <X className="w-4 h-4" />
+              </button>
+           </div>
+           <div className="flex-1 overflow-y-auto custom-scrollbar p-6 space-y-4 flex flex-col">
+              <div className="bg-blue-50 border border-blue-200 rounded-2xl p-4">
+                 <p className="text-xs font-bold text-blue-700">📋 Sélectionnez les clients et appliquez une date dépôt pour tous leurs dossiers en une seule action</p>
+              </div>
+              
+              <div className="bg-slate-50 border border-slate-200 rounded-2xl p-4 space-y-2">
+                 <label className="text-xs font-black text-slate-700 uppercase tracking-wider block">📅 Date Dépôt à Appliquer</label>
+                 <input 
+                    type="date" 
+                    value={newDepotDate}
+                    onChange={(e) => setNewDepotDate(e.target.value)}
+                    className="w-full p-3 bg-white border border-blue-300 rounded-xl text-sm font-bold text-blue-700 shadow-sm cursor-pointer"
+                 />
+              </div>
+              
+              <div className="space-y-3 overflow-y-auto flex-1">
+                 <label className="text-xs font-black text-slate-700 uppercase tracking-wider block">👥 Clients à Modifier</label>
+                 {Array.from(new Set(filteredOrders.map(o => o.raisonSociale))).filter(Boolean).map((clientName) => {
+                    const clientOrders = filteredOrders.filter(o => o.raisonSociale === clientName);
+                    const isSelected = selectedClientsForDate.includes(clientName || '');
+                    return (
+                       <div key={clientName} className="p-4 bg-slate-50 border border-slate-200 rounded-2xl hover:bg-blue-50 hover:border-blue-200 transition-all cursor-pointer" onClick={() => {
+                          const newSelection = isSelected 
+                             ? selectedClientsForDate.filter(c => c !== clientName) 
+                             : [...selectedClientsForDate, clientName || ''];
+                          setSelectedClientsForDate(newSelection);
+                       }}>
+                          <div className="flex items-start gap-4">
+                             <input 
+                                type="checkbox" 
+                                checked={isSelected}
+                                onChange={() => {}}
+                                className="mt-1.5 w-5 h-5 cursor-pointer accent-blue-600"
+                             />
+                             <div className="flex-1 min-w-0">
+                                <p className="font-bold text-sm text-slate-900">{clientName || 'Sans nom'}</p>
+                                <p className="text-xs text-slate-500 mt-2">📦 {clientOrders.length} dossier(s) à mettre à jour</p>
+                                <div className="mt-2 text-xs text-slate-500 space-y-1">
+                                   {clientOrders.slice(0, 2).map(o => <div key={o.id}>• {o.offre || 'N/A'} - Réf: {o.refContrat || 'N/A'}</div>)}
+                                   {clientOrders.length > 2 && <div>• +{clientOrders.length - 2} autre(s)</div>}
+                                </div>
+                             </div>
+                             <span className="text-xs font-black text-blue-600 bg-blue-50 px-2.5 py-1 rounded-lg">{clientOrders.length}</span>
+                          </div>
+                       </div>
+                    );
+                 })}
+              </div>
+           </div>
+           <div className="p-6 bg-slate-50 border-t flex gap-4">
+              <button onClick={() => { setShowModifyDepotDatePanel(false); setSelectedClientsForDate([]); }} className="flex-1 py-3 bg-white border border-slate-200 text-slate-600 rounded-2xl font-black uppercase text-xs hover:bg-slate-100 transition-colors shadow-sm">Annuler</button>
+              <button onClick={async () => {
+                 if (selectedClientsForDate.length === 0) {
+                   alert('Veuillez sélectionner au moins un client');
+                   return;
+                 }
+                 try {
+                   const updatedOrders = filteredOrders.filter(o => selectedClientsForDate.includes(o.raisonSociale || '')).map(o => ({...o, dateDepot: newDepotDate}));
+                   const totalDossiers = updatedOrders.length;
+                   await saveCloudData('adv', updatedOrders);
+                   alert(`✅ ${selectedClientsForDate.length} client(s) - ${totalDossiers} dossier(s) mis à jour avec la date ${newDepotDate}`);
+                   setShowModifyDepotDatePanel(false);
+                   setSelectedClientsForDate([]);
+                   loadData();
+                 } catch (error) {
+                   alert('❌ Erreur lors de la mise à jour: ' + (error instanceof Error ? error.message : 'Erreur inconnue'));
+                 }
+              }} className="flex-1 py-3 bg-blue-600 text-white rounded-2xl font-black uppercase text-xs hover:bg-blue-700 transition-colors shadow-lg">Appliquer à {selectedClientsForDate.length} client(s)</button>
            </div>
         </div>
       )}
