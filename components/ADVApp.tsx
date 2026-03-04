@@ -951,7 +951,7 @@ const ADVApp: React.FC<ADVAppProps> = ({ user, salesAgents = SALES_AGENTS }) => 
   const filteredOrders = useMemo(() => {
     const s = searchTerm.toLowerCase();
     return orders.filter(o => {
-      const matchSearch = (o.refContrat || '').toLowerCase().includes(s) || (o.raisonSociale || '').toLowerCase().includes(s) || (o.telephone || '').includes(s) || (o.commercial || '').toLowerCase().includes(s) || (o.offre || '').toLowerCase().includes(s);
+      const matchSearch = (o.refContrat || '').toLowerCase().includes(s) || (o.raisonSociale || '').toLowerCase().includes(s) || (o.telephone || '').includes(s) || (o.commercial || '').toLowerCase().includes(s) || (o.offre || '').toLowerCase().includes(s) || (o.nSerieVerifie || '').toLowerCase().includes(s);
       let matchDate = true;
       if (filterDateStart) matchDate = matchDate && new Date(o.dateDepot) >= new Date(filterDateStart);
       if (filterDateEnd) { const end = new Date(filterDateEnd); end.setHours(23, 59, 59); matchDate = matchDate && new Date(o.dateDepot) <= end; }
@@ -1121,7 +1121,7 @@ const ADVApp: React.FC<ADVAppProps> = ({ user, salesAgents = SALES_AGENTS }) => 
         <div className="bg-white p-4 rounded-[2.5rem] shadow-sm border border-slate-100 mb-6 flex flex-wrap items-center gap-3">
            <div className="relative flex-grow min-w-[200px] group">
               <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-300 group-focus-within:text-[#ff7900] transition-colors" />
-              <input type="text" placeholder="Rechercher (Client, Réf, Tel, Produit...)" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-slate-50 border-none text-xs font-bold shadow-inner focus:ring-2 focus:ring-[#ff7900]/20 transition-all" />
+              <input type="text" placeholder="Rechercher (Client, Réf, Tel, Produit, Sériel Vérifié...)" value={searchTerm} onChange={e => setSearchTerm(e.target.value)} className="w-full pl-11 pr-4 py-3.5 rounded-2xl bg-slate-50 border-none text-xs font-bold shadow-inner focus:ring-2 focus:ring-[#ff7900]/20 transition-all" />
            </div>
            
            <div className="flex items-center gap-2">
