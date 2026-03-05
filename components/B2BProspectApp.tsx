@@ -3,12 +3,14 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { User, Prospect, Opportunity, ModulePermissions, OpportunityStage } from '../types';
 import { getCloudData, saveCloudData, addArrayItem, db } from '../services/database';
 import { doc, onSnapshot } from "firebase/firestore";
+import * as XLSX from 'xlsx';
+import { exportOpportunitiesToExcel } from '../services/opportunityExportService';
 import { 
   Briefcase, Plus, Search, Filter, Edit3, Trash2, ArrowRightCircle, 
   Phone, Mail, MapPin, Calendar, CheckCircle2, XCircle, LayoutList, 
   Kanban, Loader2, X, Save, Target, TrendingUp, Users, RefreshCcw,
   Building2, ChevronRight, UserPlus, PhoneCall, ExternalLink, AlertTriangle,
-  Radar, Map as MapIcon, Crosshair, ZoomIn, ZoomOut, Locate, Navigation
+  Radar, Map as MapIcon, Crosshair, ZoomIn, ZoomOut, Locate, Navigation, Download
 } from 'lucide-react';
 import { SALES_AGENTS, PRODUCT_OFFERS } from '../constants';
 
@@ -96,6 +98,15 @@ const MAP_BOUNDS = {
         console.error("Erreur rafraîchissement manuel", e);
     } finally {
         setIsLoading(false);
+    }
+  };
+
+  const handleExportOpportunities = async () => {
+    try {
+      exportOpportunitiesToExcel(filteredOpportunities, prospects);
+    } catch (e: any) {
+      console.error("Erreur lors de l'export", e);
+      alert(e.message || "Une erreur s'est produite lors de l'export");
     }
   };
 
@@ -500,6 +511,15 @@ const MAP_BOUNDS = {
          <button onClick={handleRefresh} className="p-3.5 md:p-3 bg-slate-100 text-slate-500 hover:text-indigo-600 rounded-xl md:rounded-2xl transition-all shadow-sm order-3 md:order-none">
             <RefreshCcw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
          </button>
+         {activeTab === 'pipeline' && filteredOpportunities.length > 0 && (
+            <button 
+              onClick={handleExportOpportunities} 
+              className="p-3.5 md:p-3 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-xl md:rounded-2xl transition-all shadow-sm order-3 md:order-none"
+              title="Exporter les opportunités en Excel"
+            >
+              <Download className="w-4 h-4" />
+            </button>
+         )}
          <div className="w-full md:w-auto order-4 md:order-none">
            {hasPerm('create') && (
               <button 
