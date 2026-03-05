@@ -25,6 +25,11 @@ const ICONS_MAP: Record<string, any> = {
     'Router': Router
 };
 
+// Helper function to clean reference fields and prevent sync conflicts
+const cleanReference = (ref: string): string => {
+  return (ref || '').trim().replace(/\s+/g, ' ');
+};
+
 const TVDashboard: React.FC = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [advOrders, setAdvOrders] = useState<ADVOrder[]>([]);
@@ -56,7 +61,66 @@ const TVDashboard: React.FC = () => {
           getCloudData('hr_analysis_index')
         ]);
 
-        if(adv) setAdvOrders(adv);
+        if(adv) {
+          // Nettoyer les références EN MÉMOIRE SEULEMENT (pas de réécriture destructrice)
+          // Dédeduplication pour éviter le double comptage et matcher le Portail ADV
+          const cleanedData = adv.map((o: ADVOrder) => ({
+            ...o,
+            refContrat: cleanReference(o.refContrat || ''),
+            doliRef: o.doliRef ? cleanReference(o.doliRef) : o.doliRef,
+            raisonSociale: cleanReference(o.raisonSociale || ''),
+            telephone: cleanReference(o.telephone || ''),
+            nFixe: o.nFixe ? cleanReference(o.nFixe) : o.nFixe,
+            nSerie: o.nSerie ? cleanReference(o.nSerie) : o.nSerie,
+          }));
+
+          // Dédupliquer EN MÉMOIRE SEULEMENT pour l'affichage
+          // IMPORTANT: Les commandes manuelles et celles modifiées par l'utilisateur sont TOUJOURS prioritaires
+          const refMap = new Map<string, ADVOrder>();
+          for (const order of cleanedData) {
+            const key = cleanReference(order.refContrat || '');
+            if (!key) continue; // Pas de refContrat, garder tel quel
+            
+            const existing = refMap.get(key);
+            if (!existing) {
+              refMap.set(key, order);
+            } else {
+              // PRIORITÉ 1: Commandes manuelles toujours prioritaires
+              if (order.isManuallyCreated && !existing.isManuallyCreated) {
+                refMap.set(key, order);
+              } else if (existing.isManuallyCreated && !order.isManuallyCreated) {
+                // garder l'existante
+              } else {
+                // PRIORITÉ 2: Commande avec lastEditedAt (modifiée par utilisateur) est prioritaire
+                const existingEdited = existing.lastEditedAt || '';
+                const newEdited = order.lastEditedAt || '';
+                if (newEdited && !existingEdited) {
+                  refMap.set(key, order);
+                } else if (existingEdited && !newEdited) {
+                  // garder l'existante
+                } else {
+                  // PRIORITÉ 3: Garder la version avec un statut modifié
+                  const isExistingModified = existing.isManuallyCreated || existing.isConfirmed || existing.validation !== 'EN ATTENTE' || existing.statutSi !== 'En Etudes';
+                  const isNewModified = order.isManuallyCreated || order.isConfirmed || order.validation !== 'EN ATTENTE' || order.statutSi !== 'En Etudes';
+                  
+                  if (isNewModified && !isExistingModified) {
+                    refMap.set(key, order);
+                  } else if (!isExistingModified && !isNewModified) {
+                    // Les deux non modifiées, garder la plus récente
+                    const existingDate = new Date(existing.dateTraitement || 0).getTime();
+                    const newDate = new Date(order.dateTraitement || 0).getTime();
+                    if (newDate > existingDate) refMap.set(key, order);
+                  }
+                }
+              }
+            }
+          }
+
+          const ordersWithoutRef = cleanedData.filter((o: ADVOrder) => !cleanReference(o.refContrat || ''));
+          const deduplicatedOrders = [...ordersWithoutRef, ...Array.from(refMap.values())];
+          
+          setAdvOrders(deduplicatedOrders);
+        }
         if(items) setStockItems(items);
         if(units) setStockUnits(units);
         if(pros) setProspects(pros);
