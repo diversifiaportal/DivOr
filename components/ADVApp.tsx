@@ -35,12 +35,18 @@ const SI_STATUS_COLORS: Record<string, string> = {
   'A traiter': 'bg-slate-100 text-slate-600 border-slate-200',
   'Bloqué': 'bg-orange-50 text-orange-600 border-orange-200',
   'Annulé': 'bg-rose-50 text-rose-600 border-rose-200',
+  'Portabilité': 'bg-emerald-50 text-emerald-600 border-emerald-200',
+  'Migration': 'bg-amber-50 text-amber-600 border-amber-200',
 };
 
 const ADV_REASONS = [
   "Injoignable", "Document non conforme", "Demande en double", 
   "Client BtoC", "Client Indisponible", "Client Douteux", 
-  "Non elligible", "Probléme de passage", "Dossier Refusé"
+  "Non elligible", "Probléme de passage", "Dossier Refusé",
+  "Validation N+1","Contacte erroné ","Installé avec AP ",
+  "Annulé par le client","Demande en double","Fraude","Pas de CIN ",
+  "Impayé","client militaire"
+
 ];
 
 // Nouveaux motifs pour le blocage Activation (SI)
@@ -55,6 +61,22 @@ const ACTIVATION_REASONS = [
   "Annulation par Client",
   "Déjà Installé (Concurrent)",
   "Problème Syyndic/Autorisation",
+  "Adresse erronée",
+  "Client déjà installé",
+  "Non éligible",
+  "Client injoignable",
+  "Annulé par le service",
+  "Demande en double",
+  "Annulé par le client",
+  "Problème passage",
+  "Photo de local déjà utilisée",
+  "Manque cachet",
+  "Portabilité refusé",
+  "Problème Technique",
+  "Client particulier",
+  "Document non conforme",
+  "Contact erroné",
+  "Manque de CIN",
   "Autre"
 ];
 
