@@ -1086,9 +1086,15 @@ const ADVApp: React.FC<ADVAppProps> = ({ user, salesAgents = SALES_AGENTS }) => 
     setAiChat(prev => [...prev, { role: 'user', content: aiInput }]);
     setAiInput('');
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
-      const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: `Assistant ADV. Stats: ${filteredOrders.length} dossiers. Question: ${aiInput}` });
-      setAiChat(prev => [...prev, { role: 'assistant', content: response.text || "Erreur." }]);
+      //const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI(process.env.API_KEY as string);
+      const model = ai.getGenerativeModel({
+  model: "gemini-1.5-flash"
+});
+
+      const response = await model.generateContent( `Assistant ADV. Stats: ${filteredOrders.length} dossiers. Question: ${aiInput}` );
+      const text = response.response.text();
+      setAiChat(prev => [...prev, { role: 'assistant', content: text || "Erreur." }]);
     } catch (e) { setAiChat(prev => [...prev, { role: 'assistant', content: "Erreur connexion." }]); } finally { setIsAiThinking(false); }
   };
 
