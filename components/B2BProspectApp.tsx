@@ -511,7 +511,7 @@ const MAP_BOUNDS = {
          <button onClick={handleRefresh} className="p-3.5 md:p-3 bg-slate-100 text-slate-500 hover:text-indigo-600 rounded-xl md:rounded-2xl transition-all shadow-sm order-3 md:order-none">
             <RefreshCcw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
          </button>
-         {activeTab === 'pipeline' && filteredOpportunities.length > 0 && (
+         {(activeTab === 'pipeline' || activeTab === 'prospects') && filteredOpportunities.length > 0 && (
             <button 
               onClick={handleExportOpportunities} 
               className="p-3.5 md:p-3 bg-emerald-50 text-emerald-600 hover:bg-emerald-100 rounded-xl md:rounded-2xl transition-all shadow-sm order-3 md:order-none"
