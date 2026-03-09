@@ -222,9 +222,9 @@ const KPIPilotApp: React.FC<KPIPilotAppProps> = ({ user }) => {
     if(o.includes('TDLTE')) return 'TDLTE+';
     if(o.includes('PARTAGE')) return 'Partage';
     if(o.includes('FTTH') || o.includes('FIBRE')) return 'FTTH';
-    if(o.includes('BOX') || o.includes('5G') || o.includes('SIM')) return 'BOX/SIM';
-    // CORRECTIF: Ajout de 'FF' et 'PRO CONNECT' pour bien capturer tous les forfaits mobiles
+    // Prioriser mobile avant BOX/SIM pour eviter de classer des forfaits mobile en box
     if(o.includes('FORFAIT') || o.includes('ILLIMITE') || o.includes('MOBILE') || o.includes('FF') || o.includes('PRO CONNECT')) return 'MOBILE';
+    if(o.includes('BOX') || o.includes('ROUTEUR') || o.includes('MODEM') || o.includes('5G BOX')) return 'BOX/SIM';
     if(o.includes('ADSL')) return 'ADSL';
     return 'AUTRE';
   };
@@ -507,9 +507,9 @@ const KPIPilotApp: React.FC<KPIPilotAppProps> = ({ user }) => {
       if (offer.includes('PARTAGE')) { stats.partage++; counted = true; }
       else if (offer.includes('FTTH') || offer.includes('FIBRE')) { stats.ftth++; counted = true; }
       else if (offer.includes('TDLTE')) { stats.tdlte++; counted = true; }
-      else if (offer.includes('BOX') || offer.includes('5G') || offer.includes('SIM')) { stats.box++; counted = true; }
+      else if (offer.includes('FORFAIT') || offer.includes('ILLIMITE') || offer.includes('WIFI') || offer.includes('MOBILE') || offer.includes('FF') || offer.includes('PRO CONNECT')) { stats.mobile++; counted = true; }
+      else if (offer.includes('BOX') || offer.includes('ROUTEUR') || offer.includes('MODEM') || offer.includes('5G BOX')) { stats.box++; counted = true; }
       else if (offer.includes('ADSL')) { stats.adsl++; counted = true; }
-      else if (offer.includes('FORFAIT') || offer.includes('ILLIMITE') || offer.includes('WIFI') || offer.includes('MOBILE')) { stats.mobile++; counted = true; }
       else { stats.mobile++; counted = true; }
       if (counted) stats.totalGlobal++;
     });
