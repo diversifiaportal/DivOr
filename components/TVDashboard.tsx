@@ -205,28 +205,30 @@ const TVDashboard: React.FC = () => {
 
     const rate = total > 0 ? Math.round((validated / total) * 100) : 0;
 
-    // Calcul des Facturés + Installés non facturés (Statut SI précis + Validation VALIDE)
-    // Filtrage par dateStatutSi (date du changement de statut) uniquement
+    // Calcul des facturés (devrait correspondre exactement au Portail ADV)
+    // Le portail considère une commande facturée lorsque le statut SI contient
+    // "Facturé" (sans "Non") et évalue le mois via la date de dépôt.
+    // Nous imitons cette logique ici afin d'éliminer les écarts observés.
+    const normalizeStatus = (str: string = ''): string =>
+        str.trim().toUpperCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+
     const facturedOrders = advOrders.filter(o => {
-        // Condition 1: Validation doit être VALIDE (obligatoire)
+        // 1. validation VALIDE
         if (o.validation !== 'VALIDE') return false;
-        
-        const sRaw = (o.statutSi || '').trim().toUpperCase();
-        const s = sRaw.normalize("NFD").replace(/[\u0300-\u036f]/g, ""); // Normalisation accents
-        
-        // Condition 2: Statut SI doit être "Facturé" OU "Installé non Facturé"
-        if (!s.includes('FACTURE') && !s.includes('INSTALLE')) return false;
-        
-        // Condition 3: dateStatutSi doit exister et être dans le mois en cours
-        if (!o.dateStatutSi) return false;
-        
-        let d = o.dateStatutSi;
-        if (d.includes('T')) d = d.split('T')[0]; // ISO
-        if (d.includes('/')) { // FR DD/MM/YYYY
-           const parts = d.split('/');
-           if (parts.length === 3) d = `${parts[2]}-${parts[1]}-${parts[0]}`;
+
+        // 2. statut SI facturé
+        const status = normalizeStatus(o.statutSi || '');
+        const isFact = status.includes('FACTURE') && !status.includes('NON');
+        if (!isFact) return false;
+
+        // 3. mois basé sur dateDepot (même logique que Dashboard.tsx import)
+        let dateStr = o.dateDepot || '';
+        if (dateStr.includes('T')) dateStr = dateStr.split('T')[0];
+        if (dateStr.includes('/') && dateStr.split('/').length === 3) {
+            const parts = dateStr.split('/');
+            if (parts.length === 3) dateStr = `${parts[2]}-${parts[1]}-${parts[0]}`;
         }
-        return d.startsWith(currentMonth);
+        return dateStr.startsWith(currentMonth);
     });
     const facturedCount = facturedOrders.length;
 
