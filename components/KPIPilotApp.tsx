@@ -776,7 +776,8 @@ const KPIPilotApp: React.FC<KPIPilotAppProps> = ({ user }) => {
     setIsAiThinking(true);
     if (!customPrompt) { setAiChat(prev => [...prev, { role: 'user', content: prompt }]); setAiInput(''); }
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI(process.env.API_KEY as string);
+      //const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const context = { kpis: globalStats, month: selectedMonth, teamPerformance: teamData, projectManager: projectManagerStats, meetingStats: meetingStats };
       const systemInstruction = `Tu es le Directeur de la Stratégie de DIVERSIFIA. Données du mois ${selectedMonth} : ${safeJSON(context)}. Rôle : Analyser les performances des équipes sous la direction de ${projectManager}. Identifier les vendeurs en difficulté (TRO < 50%) et les produits qui performent bien. Pour la réunion matinale, analyse les écarts entre prévisions et réalisations. Donne des conseils managériaux.`;
       const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt, config: { systemInstruction } });

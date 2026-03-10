@@ -296,6 +296,20 @@ const FieldControlApp: React.FC<FieldControlAppProps> = ({ user, salesAgents = S
       })).sort((a, b) => b.size - a.size);
   }, [controls]);
 
+  const topRadarTeams = useMemo(() => teamComparisonStats.slice(0, 3), [teamComparisonStats]);
+
+  const radarChartData = useMemo(() => {
+    const subjects = ['Respect Zone', 'Port du Kit', 'Supervision', 'Discipline'];
+    return subjects.map(subject => {
+      const point: Record<string, string | number> = { subject };
+      topRadarTeams.forEach(team => {
+        const metric = team.radarData.find(item => item.subject === subject);
+        point[team.name] = metric?.A ?? 0;
+      });
+      return point;
+    });
+  }, [topRadarTeams]);
+
   // --- ACTIONS ---
 
   const handleGetLocation = () => {
@@ -1107,17 +1121,16 @@ const FieldControlApp: React.FC<FieldControlAppProps> = ({ user, salesAgents = S
                         </div>
                         <div className="h-80 w-full">
                             <ResponsiveContainer width="100%" height="100%">
-                                <RadarChart cx="50%" cy="50%" outerRadius="70%">
+                                <RadarChart data={radarChartData} cx="50%" cy="50%" outerRadius="70%">
                                     <PolarGrid stroke="#e2e8f0" />
                                     <PolarAngleAxis dataKey="subject" tick={{ fontSize: 10, fontWeight: 'bold', fill: '#64748b' }} />
                                     <PolarRadiusAxis angle={30} domain={[0, 100]} tick={false} axisLine={false} />
                                     <Legend verticalAlign="bottom" iconType="circle" wrapperStyle={{fontSize: '10px'}} />
-                                    {teamComparisonStats.slice(0, 3).map((team, idx) => (
+                                    {topRadarTeams.map((team, idx) => (
                                         <Radar
                                             key={team.name}
                                             name={team.name}
-                                            dataKey="A"
-                                            data={team.radarData}
+                                            dataKey={team.name}
                                             stroke={COLORS[idx % COLORS.length]}
                                             fill={COLORS[idx % COLORS.length]}
                                             fillOpacity={0.1}

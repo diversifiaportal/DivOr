@@ -9,7 +9,9 @@ import {
   Calendar, Search, ChevronRight, X, Play, Square, Map, LayoutDashboard, Clock
 } from 'lucide-react';
 
-interface FieldCommandAppProps { user: User; }
+interface FieldCommandAppProps { user: User;
+                                 salesAgents?: User[];
+ }
 
 // Zones prédéfinies pour le démarrage (Casablanca)
 const INITIAL_ZONES: FieldZone[] = [

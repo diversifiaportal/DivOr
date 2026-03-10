@@ -549,7 +549,8 @@ const StockManagement: React.FC<StockManagementProps> = ({ user }) => {
     setIsAiThinking(true);
     if (!customPrompt) { setAiChat(prev => [...prev, { role: 'user', content: prompt }]); setAiInput(''); }
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI(process.env.API_KEY as string);
+      //const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const response = await ai.models.generateContent({ model: 'gemini-3-flash-preview', contents: prompt, config: { systemInstruction: `Analyste Stock DIVERSIFIA.` } });
       setAiChat(prev => [...prev, { role: 'assistant', content: response.text || "Analyse indisponible." }]);
     } catch (e) { setAiChat(prev => [...prev, { role: 'assistant', content: "⚠️ Erreur IA." }]); } finally { setIsAiThinking(false); }
