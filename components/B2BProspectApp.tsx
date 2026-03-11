@@ -10,9 +10,11 @@ import {
   Phone, Mail, MapPin, Calendar, CheckCircle2, XCircle, LayoutList, 
   Kanban, Loader2, X, Save, Target, TrendingUp, Users, RefreshCcw,
   Building2, ChevronRight, UserPlus, PhoneCall, ExternalLink, AlertTriangle,
-  Radar, Map as MapIcon, Crosshair, ZoomIn, ZoomOut, Locate, Navigation, Download
+  Radar, Map as MapIcon, Crosshair, ZoomIn, ZoomOut, Locate, Navigation, Download,
+  MessageSquare
 } from 'lucide-react';
 import { SALES_AGENTS, PRODUCT_OFFERS } from '../constants';
+import CommentModal from './B2BProspectCommentModal';
 
 interface B2BProspectAppProps {
   user: User;
@@ -72,12 +74,14 @@ const MAP_BOUNDS = {
   const [isDragging, setIsDragging] = useState(false);
   const dragStart = useRef({ x: 0, y: 0 });
 
-  const [showModal, setShowModal] = useState<'prospect' | 'opportunity' | 'delete_confirm' | null>(null);
+  const [showModal, setShowModal] = useState<'prospect' | 'opportunity' | 'delete_confirm' | 'comment' | null>(null);
   const [prospectToDelete, setProspectToDelete] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   
   const [editingProspect, setEditingProspect] = useState<Prospect | null>(null);
   const [prospectForm, setProspectForm] = useState<Partial<Prospect>>({});
+  const [commentProspect, setCommentProspect] = useState<Prospect | null>(null);
+  const [commentText, setCommentText] = useState('');
   
   const [editingOpp, setEditingOpp] = useState<Opportunity | null>(null);
   const [oppForm, setOppForm] = useState<Partial<Opportunity>>({});
@@ -309,6 +313,37 @@ const MAP_BOUNDS = {
         }
         setShowModal(null); setEditingProspect(null); setProspectForm({});
     } catch (e) { console.error(e); } finally { setIsSaving(false); }
+  };
+
+  const openCommentModal = (p: Prospect) => {
+    if (!hasPerm('update')) return;
+    setCommentProspect(p);
+    setCommentText(p.notes || '');
+    setShowModal('comment');
+  };
+
+  const handleSaveComment = async () => {
+    if (!commentProspect) return;
+    if (!hasPerm('update')) return;
+    setIsSaving(true);
+    try {
+        const now = new Date().toISOString();
+        const latestData = await getCloudData('b2b_prospects') || prospects;
+        const updatedList = latestData.map((p: Prospect) => 
+          p.id === commentProspect.id 
+            ? { ...p, notes: commentText, updatedAt: now, lastAction: now } 
+            : p
+        );
+        await saveCloudData('b2b_prospects', updatedList);
+        setProspects(updatedList);
+        setShowModal(null);
+        setCommentProspect(null);
+        setCommentText('');
+    } catch (e) { 
+        console.error(e); 
+    } finally { 
+        setIsSaving(false); 
+    }
   };
 
   const handleDeleteProspect = (id: string) => {
@@ -552,7 +587,14 @@ const MAP_BOUNDS = {
                          <div className="flex items-center justify-end gap-2 group-hover:opacity-100 transition-opacity">
                             {p.latitude && p.longitude && (<button onClick={() => window.open(`https://www.google.com/maps/search/?api=1&query=${p.latitude},${p.longitude}`, '_blank')} className="p-2 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-100 min-w-[36px] min-h-[36px] flex items-center justify-center"><MapPin className="w-4 h-4" /></button>)}
                             {hasPerm('create') && (
-                              <button onClick={() => openOppModal(undefined, p.id)} className="p-2 bg-[#ff7900] text-white rounded-xl hover:bg-slate-900 min-w-[36px] min-h-[36px] flex items-center justify-center shadow-md transition-all active:scale-95"><Plus className="w-4 h-4" /></button>
+                              <button onClick={() => openOppModal(undefined, p.id)} className="p-2 bg-[#ff7900] text-white rounded-xl hover:bg-slate-900 min-w-[36px] min-h-[36px] flex items-center justify-center shadow-md transition-all active:scale-95" title="Nouveau Deal">
+                                <Plus className="w-4 h-4" />
+                              </button>
+                            )}
+                            {hasPerm('update') && (
+                              <button onClick={() => openCommentModal(p)} className={`p-2 rounded-xl min-w-[36px] min-h-[36px] flex items-center justify-center transition-all ${p.notes ? 'bg-amber-50 text-amber-600 hover:bg-amber-100' : 'bg-slate-100 text-slate-500 hover:bg-indigo-50 hover:text-indigo-600'}`} title="Commentaire Agent">
+                                <MessageSquare className="w-4 h-4" />
+                              </button>
                             )}
                             {hasPerm('update') && (<button onClick={() => openProspectModal(p)} className="p-2 bg-slate-100 text-slate-500 rounded-xl hover:bg-indigo-50 hover:text-indigo-600 min-w-[36px] min-h-[36px] flex items-center justify-center"><Edit3 className="w-4 h-4" /></button>)}
                             {hasPerm('delete') && (<button onClick={() => handleDeleteProspect(p.id)} className="p-2 bg-slate-100 text-slate-500 rounded-xl hover:bg-rose-50 hover:text-rose-600 min-w-[36px] min-h-[36px] flex items-center justify-center"><Trash2 className="w-4 h-4" /></button>)}
@@ -606,8 +648,13 @@ const MAP_BOUNDS = {
                                </button>
                              )}
                              {hasPerm('create') && (
-                               <button onClick={() => openOppModal(undefined, p.id)} className="w-10 h-10 bg-[#ff7900] text-white rounded-xl flex items-center justify-center shadow-md active:scale-95">
+                               <button onClick={() => openOppModal(undefined, p.id)} className="w-10 h-10 bg-[#ff7900] text-white rounded-xl flex items-center justify-center shadow-md active:scale-95" title="Nouveau Deal">
                                   <Briefcase className="w-5 h-5" />
+                               </button>
+                             )}
+                             {hasPerm('update') && (
+                               <button onClick={() => openCommentModal(p)} className={`w-10 h-10 rounded-xl flex items-center justify-center ${p.notes ? 'bg-amber-50 text-amber-600' : 'bg-slate-100 text-slate-600'}`} title="Commentaire Agent">
+                                  <MessageSquare className="w-5 h-5" />
                                </button>
                              )}
                              <button onClick={() => openProspectModal(p)} className="w-10 h-10 bg-slate-100 text-slate-600 rounded-xl flex items-center justify-center">
@@ -874,6 +921,16 @@ const MAP_BOUNDS = {
            </div>
         </div>
       )}
+
+      <CommentModal
+        isOpen={showModal === 'comment'}
+        prospect={commentProspect}
+        value={commentText}
+        isSaving={isSaving}
+        onChange={setCommentText}
+        onClose={() => { setShowModal(null); setCommentProspect(null); setCommentText(''); }}
+        onSave={handleSaveComment}
+      />
 
       {showModal === 'delete_confirm' && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">

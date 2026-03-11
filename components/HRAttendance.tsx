@@ -811,7 +811,8 @@ const HRAttendance: React.FC<HRAttendanceProps> = ({ user }) => {
     }
 
     try {
-      const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
+      const ai = new GoogleGenAI(process.env.API_KEY as string);
+      //const ai = new GoogleGenAI({ apiKey: process.env.API_KEY });
       const hrContext = {
         stats: stats,
         recap: recapMonthly.slice(0, 15),

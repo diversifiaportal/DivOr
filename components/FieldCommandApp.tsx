@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 
 interface FieldCommandAppProps { user: User;
-                                 salesAgents?: User[];
+                                 salesAgents?: String[];
  }
 
 // Zones prédéfinies pour le démarrage (Casablanca)
