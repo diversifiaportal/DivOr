@@ -27,7 +27,10 @@ const App: React.FC = () => {
 
   useEffect(() => {
     const session = sessionStorage.getItem('diversifia_session');
-    if (session) setUser(JSON.parse(session));
+    if (session) {
+      const sessionUser = JSON.parse(session);
+      setUser(sessionUser);
+    }
   }, []);
 
   useEffect(() => {

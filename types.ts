@@ -12,7 +12,10 @@ export interface Attachment {
   id: string;
   name: string;
   mimeType: string;
-  data: string; // base64
+  data?: string; // base64 (legacy)
+  dataEnc?: string; // base64 (AES-GCM)
+  iv?: string; // base64 (AES-GCM)
+  storage?: 'inline' | 'idb';
   date: string;
 }
 
