@@ -283,6 +283,8 @@ const MAP_BOUNDS = {
     if (!hasPerm('create') && !editingProspect) return;
     if (!hasPerm('update') && editingProspect) return;
     if (!prospectForm.companyName) return alert("Nom de l'entreprise requis");
+    if (!prospectForm.phone || !prospectForm.phone.trim()) return alert("TÃ©lÃ©phone requis");
+    if (prospectForm.latitude == null || prospectForm.longitude == null) return alert("Position GPS requise");
     
     // VALIDATION : Localisation recommandée mais pas bloquante pour l'UX
     if (!prospectForm.assignedTo) return alert("Le choix de l'agent assigné (vendeur) est obligatoire.");
@@ -830,8 +832,21 @@ const MAP_BOUNDS = {
                  <div><label className="text-[10px] font-black uppercase text-slate-400 ml-2 tracking-widest">État</label><select value={prospectForm.status || 'Nouveau Client'} onChange={e => setProspectForm({...prospectForm, status: e.target.value as any})} className="w-full p-4 rounded-2xl bg-slate-50 border-none font-bold text-sm appearance-none shadow-inner">{PROSPECT_STATUSES.map(s => <option key={s} value={s}>{s}</option>)}</select></div>
                  <div className="flex items-center justify-between bg-slate-50 p-4 rounded-2xl border border-slate-100"><div className="flex items-center space-x-3"><div className={`p-3 rounded-xl ${prospectForm.latitude ? 'bg-emerald-100 text-emerald-600' : 'bg-slate-200 text-slate-400'}`}><MapPin className="w-6 h-6" /></div><div><p className="text-[10px] font-black uppercase text-slate-400">Position GPS *</p><p className="text-xs font-bold text-slate-700">{prospectForm.latitude ? `${prospectForm.latitude.toFixed(4)}, ${prospectForm.longitude?.toFixed(4)}` : 'Non défini (Requis)'}</p></div></div><button onClick={handleGetLocation} type="button" className="px-5 py-3 bg-white border border-slate-200 rounded-xl text-[10px] font-black uppercase hover:bg-slate-50 transition-all shadow-sm active:scale-95">Localiser</button></div>
                  <div><label className="text-[10px] font-black uppercase text-slate-400 ml-2 tracking-widest">Agent Assigné *</label><select value={prospectForm.assignedTo || ''} onChange={e => setProspectForm({...prospectForm, assignedTo: e.target.value})} className="w-full p-4 rounded-2xl bg-slate-50 border-none font-bold text-sm appearance-none shadow-inner"><option value="">Sélectionner un agent...</option>{salesAgents.map(a => <option key={a} value={a}>{a}</option>)}</select></div>
-              </div>
-              <button onClick={handleSaveProspect} disabled={isSaving} className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black uppercase text-sm shadow-xl active:scale-95 transition-transform mt-4">{isSaving ? 'Enregistrement...' : 'Valider Prospect'}</button>
+              </div>              <button
+                onClick={handleSaveProspect}
+                disabled={
+                  isSaving ||
+                  !prospectForm.companyName ||
+                  !prospectForm.phone ||
+                  !prospectForm.phone.trim() ||
+                  prospectForm.latitude == null ||
+                  prospectForm.longitude == null ||
+                  !prospectForm.assignedTo
+                }
+                className="w-full py-5 bg-indigo-600 text-white rounded-2xl font-black uppercase text-sm shadow-xl active:scale-95 transition-transform mt-4 disabled:opacity-50"
+              >
+                {isSaving ? 'Enregistrement...' : 'Valider Prospect'}
+              </button>
            </div>
         </div>
       )}
